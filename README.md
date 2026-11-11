@@ -2,6 +2,8 @@
 
 [![Product safety evaluation](https://github.com/lixueyuan0314-beep/Travel_plan_agent_IA/actions/workflows/product-eval.yml/badge.svg)](https://github.com/lixueyuan0314-beep/Travel_plan_agent_IA/actions/workflows/product-eval.yml)
 
+**Live portfolio demo:** [lixueyuan-travel-agent-demo.streamlit.app](https://lixueyuan-travel-agent-demo.streamlit.app/)
+
 > Un projet pour approfondir mes connaissances en LLM, Agent IA, RAG, MCP…
 
 ## Fork extension: product safety and preference controls
