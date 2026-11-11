@@ -35,7 +35,7 @@ The product layer now has a reproducible, network-free scenario suite in
 transport provider and checks whether the agent should show a confirmation or
 fall back for clarification.
 
-Current result: **24/24 scenarios passed (100%)**, with **0 false
+Current result: **30/30 scenarios passed (100%)**, with **0 false
 confirmations** and **0 missed confirmations**. Coverage includes:
 
 - single-mode and multi-mode confirmation previews;
@@ -44,23 +44,28 @@ confirmations** and **0 missed confirmations**. Coverage includes:
 - malformed, unrecognized, and past dates;
 - invalid preference validation;
 - budget and transfer constraints;
-- ranking changes when the user changes priority.
+- ranking changes when the user changes priority;
+- provider timeout and connection-failure recovery;
+- empty-result and malformed-payload fallbacks.
 
 Run it with:
 
 ```powershell
 python -m eval.product_eval
-python -m unittest tests.test_product_layer tests.test_product_eval -v
+python -m unittest tests.test_product_layer tests.test_product_eval tests.test_resilience -v
 ```
 
-The next product iteration should parse provider responses into the shared
-`TravelOption` schema, display per-option score explanations, and extend the
-suite with mocked no-result responses, API timeouts, and malformed provider
-payloads.
+`product/resilience.py` normalizes untrusted provider responses into the shared
+`TravelOption` schema, retries transient failures at most once, and converts
+empty or malformed responses into explicit user-facing fallback states. The
+key-free demo exposes these policies through an interactive fault-injection
+lab. A next iteration should connect the normalized schema to every live MCP
+provider and add latency and recovery-rate telemetry.
 
 ## Attribution
 
 The transport MCP integrations, LangChain agent, regex fast path, Streamlit
 UI, and LangSmith evaluation framework originate from the upstream project.
 This fork's independent contribution is the confirmation, preference, ranking,
-security-hardening, tests, and product documentation described above.
+provider-recovery, security-hardening, evaluation, CI, demo, and product
+documentation described above.

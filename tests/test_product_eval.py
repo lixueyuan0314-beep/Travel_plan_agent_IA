@@ -11,9 +11,10 @@ class ProductEvaluationTests(unittest.TestCase):
 
     def test_safety_metrics_are_reported(self):
         summary = build_summary(evaluate_cases(load_cases()))
-        self.assertGreaterEqual(summary["total"], 20)
+        self.assertGreaterEqual(summary["total"], 30)
         self.assertEqual(summary["false_confirmations"], 0)
         self.assertEqual(summary["missed_confirmations"], 0)
+        self.assertEqual(summary["categories"]["provider_recovery"], {"passed": 6, "total": 6})
 
 
 if __name__ == "__main__":

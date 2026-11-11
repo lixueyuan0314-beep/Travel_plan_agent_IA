@@ -14,7 +14,8 @@ agent:
 - structured **recommend → confirm → execute** flow before live MCP searches;
 - user-controlled budget, transfer limit, and ranking priority;
 - transparent option-scoring utilities with deterministic tests;
-- a reproducible 24-case offline safety evaluation with no API keys required;
+- a reproducible 30-case offline safety and recovery evaluation with no API keys required;
+- bounded retry, payload validation, and user-safe fallbacks for provider failures;
 - safer diagnostics that never display API-key prefixes;
 - a documented product case study in [PRODUCT_CASE_STUDY.md](PRODUCT_CASE_STUDY.md).
 
@@ -22,18 +23,26 @@ The original MCP integrations, agent routing, UI, and evaluation framework are
 credited to the upstream project. The items above are the fork's independent
 extension.
 
+| Upstream foundation | Independent contribution in this fork |
+| --- | --- |
+| Transport MCP integrations and LangChain routing | Human-in-the-loop authorization and preference controls |
+| Regex fast path and original full-agent UI | Key-free product demo and transparent ranking |
+| Original LangSmith evaluation framework | 30-case offline safety/recovery suite and GitHub Actions CI |
+| Provider tool calls | Payload normalization, bounded retry, and user-safe fallbacks |
+
 ### Reproduce the product evaluation
 
 ```powershell
 python -m eval.product_eval
-python -m unittest tests.test_product_layer tests.test_product_eval -v
+python -m unittest tests.test_product_layer tests.test_product_eval tests.test_resilience -v
 ```
 
-Current result: **24/24 offline scenarios passed (100%)**, with **0 false
+Current result: **30/30 offline scenarios passed (100%)**, with **0 false
 confirmations** and **0 missed confirmations**. The scenarios cover valid
 single- and multi-mode routes, missing fields, ambiguous destination text,
-invalid or past dates, typo recovery, and preference validation. They never
-contact an LLM, MCP server, or transport provider.
+invalid or past dates, typo recovery, preference validation, provider timeouts,
+connection failures, empty results, and malformed payloads. They never contact
+an LLM, MCP server, or transport provider.
 
 ### Run the key-free portfolio demo
 
@@ -42,9 +51,9 @@ streamlit run demo_app.py
 ```
 
 The demo uses clearly labelled, deterministic sample options so reviewers can
-experience confirmation, hard constraints, and explainable ranking without
-adding API keys or contacting live providers. Use `app.py` for the full MCP
-agent with configured provider credentials.
+experience confirmation, hard constraints, explainable ranking, and an
+interactive provider-failure lab without adding API keys or contacting live
+providers. Use `app.py` for the full MCP agent with configured credentials.
 
 A French-Europe **travel CLI/web agent**: real-time flights (Duffel),
 trains (SNCF Open Data), and buses (FlixBus) wired into a LangChain

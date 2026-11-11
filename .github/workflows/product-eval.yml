@@ -26,4 +26,4 @@ jobs:
         run: python -m eval.product_eval
 
       - name: Run product unit tests
-        run: python -m unittest tests.test_product_layer tests.test_product_eval -v
+        run: python -m unittest tests.test_product_layer tests.test_product_eval tests.test_resilience -v

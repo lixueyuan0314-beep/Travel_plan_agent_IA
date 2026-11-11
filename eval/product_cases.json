@@ -142,5 +142,49 @@
     "category": "preference_validation",
     "preferences": {"priority": "luxury", "max_budget_eur": 500, "max_changes": 0},
     "expected": {"action": "rejected"}
+  },
+  {
+    "id": "provider_valid_response",
+    "category": "provider_recovery",
+    "provider_events": [
+      {"type": "payload", "value": [{"label": "Train direct", "price_eur": 68, "duration_minutes": 155, "changes": 0, "carbon_kg": 12}]}
+    ],
+    "expected": {"action": "success", "attempts": 1, "reason": "ok"}
+  },
+  {
+    "id": "provider_timeout_then_success",
+    "category": "provider_recovery",
+    "provider_events": [
+      {"type": "timeout"},
+      {"type": "payload", "value": [{"label": "Bus value", "price_eur": 34, "duration_minutes": 310, "changes": 0}]}
+    ],
+    "expected": {"action": "success", "attempts": 2, "reason": "recovered_after_retry"}
+  },
+  {
+    "id": "provider_connection_then_success",
+    "category": "provider_recovery",
+    "provider_events": [
+      {"type": "connection_error"},
+      {"type": "payload", "value": [{"label": "Flight direct", "price_eur": 118, "duration_minutes": 95, "changes": 0}]}
+    ],
+    "expected": {"action": "success", "attempts": 2, "reason": "recovered_after_retry"}
+  },
+  {
+    "id": "provider_repeated_timeout",
+    "category": "provider_recovery",
+    "provider_events": [{"type": "timeout"}, {"type": "timeout"}],
+    "expected": {"action": "failed", "attempts": 2, "reason": "timeout"}
+  },
+  {
+    "id": "provider_empty_results",
+    "category": "provider_recovery",
+    "provider_events": [{"type": "payload", "value": []}],
+    "expected": {"action": "no_results", "attempts": 1, "reason": "no_results"}
+  },
+  {
+    "id": "provider_malformed_payload",
+    "category": "provider_recovery",
+    "provider_events": [{"type": "payload", "value": {"unexpected": "shape"}}],
+    "expected": {"action": "failed", "attempts": 1, "reason": "malformed_payload"}
   }
 ]

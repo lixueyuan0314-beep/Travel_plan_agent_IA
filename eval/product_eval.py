@@ -15,6 +15,7 @@ from typing import Any
 
 from MCP.skills import parse_query
 from product.confirmation import UserPreferences, build_search_plan
+from product.resilience import execute_with_recovery
 
 
 DEFAULT_CASES = Path(__file__).with_name("product_cases.json")
@@ -77,12 +78,49 @@ def _evaluate_preferences(case: dict[str, Any]) -> CaseResult:
     )
 
 
+def _evaluate_provider_recovery(case: dict[str, Any]) -> CaseResult:
+    events = iter(case["provider_events"])
+
+    def operation() -> Any:
+        event = next(events)
+        event_type = event["type"]
+        if event_type == "timeout":
+            raise TimeoutError
+        if event_type == "connection_error":
+            raise ConnectionError
+        if event_type == "unexpected_error":
+            raise RuntimeError("simulated provider failure")
+        if event_type == "payload":
+            return event["value"]
+        raise ValueError(f"unknown simulated event: {event_type}")
+
+    expected = case["expected"]
+    result = execute_with_recovery(operation, max_attempts=case.get("max_attempts", 2))
+    errors = []
+    if result.status != expected["action"]:
+        errors.append(f"action={result.status!r}")
+    if "attempts" in expected and result.attempts != expected["attempts"]:
+        errors.append(f"attempts={result.attempts!r}")
+    if "reason" in expected and result.reason != expected["reason"]:
+        errors.append(f"reason={result.reason!r}")
+    return CaseResult(
+        case_id=case["id"],
+        category=case["category"],
+        passed=not errors,
+        expected_action=expected["action"],
+        actual_action=result.status,
+        detail=", ".join(errors),
+    )
+
+
 def evaluate_cases(cases: list[dict[str, Any]]) -> list[CaseResult]:
     """Evaluate all cases and return structured results."""
 
     results = []
     for case in cases:
-        if "preferences" in case:
+        if "provider_events" in case:
+            results.append(_evaluate_provider_recovery(case))
+        elif "preferences" in case:
             results.append(_evaluate_preferences(case))
         else:
             results.append(_evaluate_route(case))

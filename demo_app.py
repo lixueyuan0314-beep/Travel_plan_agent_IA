@@ -6,6 +6,7 @@ import streamlit as st
 from MCP.skills import parse_query
 from product.confirmation import UserPreferences, build_search_plan
 from product.demo_data import generate_demo_options
+from product.resilience import execute_with_recovery
 from product.scoring import WEIGHTS, rank_options
 
 
@@ -41,6 +42,8 @@ if "demo_plan" not in st.session_state:
     st.session_state.demo_plan = None
 if "demo_results" not in st.session_state:
     st.session_state.demo_results = None
+if "recovery_result" not in st.session_state:
+    st.session_state.recovery_result = None
 
 query = st.text_input(
     "Where would you like to go?",
@@ -96,6 +99,62 @@ if ranked:
             "Options outside hard budget or transfer limits receive a score of zero."
         )
         st.caption("Portfolio simulation only — not live availability or booking advice.")
+
+st.divider()
+with st.expander("🧪 Reliability lab: inject a provider failure", expanded=False):
+    st.write(
+        "Run deterministic failure scenarios to see when the agent retries, "
+        "rejects unsafe data, or asks the user to adjust the request."
+    )
+    scenario = st.selectbox(
+        "Injected provider behavior",
+        [
+            "Timeout, then success",
+            "Connection failure, then success",
+            "Repeated timeout",
+            "No matching results",
+            "Malformed response",
+        ],
+    )
+    if st.button("Run fault simulation"):
+        valid_payload = [
+            {
+                "label": "Train · recovered result",
+                "price_eur": 72,
+                "duration_minutes": 160,
+                "changes": 0,
+                "carbon_kg": 12,
+            }
+        ]
+        event_map = {
+            "Timeout, then success": [TimeoutError(), valid_payload],
+            "Connection failure, then success": [ConnectionError(), valid_payload],
+            "Repeated timeout": [TimeoutError(), TimeoutError()],
+            "No matching results": [[]],
+            "Malformed response": [{"unexpected": "shape"}],
+        }
+        events = iter(event_map[scenario])
+
+        def simulated_provider():
+            event = next(events)
+            if isinstance(event, Exception):
+                raise event
+            return event
+
+        st.session_state.recovery_result = execute_with_recovery(simulated_provider)
+
+    recovery = st.session_state.recovery_result
+    if recovery is not None:
+        message = (
+            f"**Status:** {recovery.status} · **Attempts:** {recovery.attempts} · "
+            f"**Reason:** `{recovery.reason}`\n\n{recovery.user_message}"
+        )
+        if recovery.status == "success":
+            st.success(message)
+        elif recovery.status == "no_results":
+            st.warning(message)
+        else:
+            st.error(message)
 
 st.divider()
 st.caption("Built as an independent product extension of the upstream MCP travel-agent project.")
