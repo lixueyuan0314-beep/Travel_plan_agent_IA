@@ -2,6 +2,21 @@
 
 > Un projet pour approfondir mes connaissances en LLM, Agent IA, RAG, MCP…
 
+## Fork extension: product safety and preference controls
+
+This fork adds a human-in-the-loop product layer on top of the upstream travel
+agent:
+
+- structured **recommend → confirm → execute** flow before live MCP searches;
+- user-controlled budget, transfer limit, and ranking priority;
+- transparent option-scoring utilities with deterministic tests;
+- safer diagnostics that never display API-key prefixes;
+- a documented product case study in [PRODUCT_CASE_STUDY.md](PRODUCT_CASE_STUDY.md).
+
+The original MCP integrations, agent routing, UI, and evaluation framework are
+credited to the upstream project. The items above are the fork's independent
+extension.
+
 A French-Europe **travel CLI/web agent**: real-time flights (Duffel),
 trains (SNCF Open Data), and buses (FlixBus) wired into a LangChain
 agent with three transport MCP servers, a regex fast-path that

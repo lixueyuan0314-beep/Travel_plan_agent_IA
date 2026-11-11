@@ -63,6 +63,7 @@ from CLI.cli import build_agent, _extract_text, _fmt_args
 from configuration.langchain_system_prompt import SYSTEM_PROMPT
 from MCP.Tools import TOOLS
 from MCP import skills
+from product.confirmation import UserPreferences, build_search_plan
 
 
 # ---------- page setup ----------
@@ -158,8 +159,30 @@ with st.sidebar:
     )
 
     st.markdown("---")
+    st.subheader("Trip preferences")
+    require_confirmation = st.checkbox(
+        "Confirm before live transport searches",
+        value=True,
+        help="Shows the route, date, modes and constraints before MCP tools query providers.",
+    )
+    priority = st.selectbox(
+        "Ranking priority",
+        options=["balanced", "cheapest", "fastest", "fewest_changes"],
+        format_func=lambda value: value.replace("_", " ").title(),
+    )
+    budget_enabled = st.checkbox("Set a maximum budget")
+    max_budget_eur = st.number_input(
+        "Maximum budget (EUR)", min_value=1, value=150, disabled=not budget_enabled
+    )
+    changes_enabled = st.checkbox("Limit transfers")
+    max_changes = st.number_input(
+        "Maximum changes", min_value=0, value=1, disabled=not changes_enabled
+    )
+
+    st.markdown("---")
     if st.button("🗑  New conversation"):
         st.session_state.messages = []
+        st.session_state.pending_action = None
         st.session_state.thread_id = f"ui-{int(time.time())}"
         st.rerun()
 
@@ -182,8 +205,7 @@ with st.sidebar:
         for k in _required_keys:
             v = os.environ.get(k, "")
             mark = "✅" if v else "❌"
-            preview = (v[:8] + "…") if v else "*missing*"
-            st.text(f"{mark} {k}  {preview}")
+            st.text(f"{mark} {k}  {'configured' if v else 'missing'}")
 
         st.caption(f"**MCP tools loaded** (from `MCP.Tools.TOOLS`):")
         try:
@@ -217,6 +239,9 @@ if "thread_id" not in st.session_state:
     # Unique per browser session — keeps tabs/windows independent.
     st.session_state.thread_id = f"ui-{int(time.time())}"
 
+if "pending_action" not in st.session_state:
+    st.session_state.pending_action = None
+
 
 # ---------- main: title + history ----------
 
@@ -235,20 +260,62 @@ for msg in st.session_state.messages:
             st.caption(f"🧠 LLM ({provider} / {model}) — {msg.get('elapsed','?')}s")
 
 
-# ---------- input + answer loop ----------
+# ---------- input + confirmation + answer loop ----------
 
-user_input = st.chat_input("Ask about flights, trains, buses, or a trip plan…")
+query_to_process = None
+pending = st.session_state.pending_action
+
+if pending:
+    st.info(pending["preview"])
+    confirm_col, cancel_col = st.columns(2)
+    if confirm_col.button("Confirm and search", type="primary", use_container_width=True):
+        query_to_process = pending["query"]
+        st.session_state.pending_action = None
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": "✅ Search confirmed. Querying the selected transport providers.",
+            "tag": "confirmation",
+        })
+    if cancel_col.button("Cancel", use_container_width=True):
+        st.session_state.pending_action = None
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": "Search cancelled. Adjust your route or preferences and try again.",
+            "tag": "confirmation",
+        })
+        st.rerun()
+
+user_input = st.chat_input(
+    "Ask about flights, trains, buses, or a trip plan…",
+    disabled=st.session_state.pending_action is not None,
+)
 
 if user_input:
-    # 1) Echo the user message
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    # 2) Try the skill fast-path
+    parsed_request = skills.parse_query(user_input)
+    if require_confirmation and parsed_request is not None:
+        preferences = UserPreferences(
+            priority=priority,
+            max_budget_eur=float(max_budget_eur) if budget_enabled else None,
+            max_changes=int(max_changes) if changes_enabled else None,
+        )
+        plan = build_search_plan(user_input, parsed_request, preferences)
+        preview = plan.to_markdown()
+        st.session_state.pending_action = {"query": user_input, "preview": preview}
+        st.session_state.messages.append({
+            "role": "assistant", "content": preview, "tag": "confirmation"
+        })
+        st.rerun()
+    query_to_process = user_input
+
+if query_to_process:
+    # Try the skill fast-path only after the confirmation gate (when enabled).
     t0 = time.time()
     try:
-        skill_result = skills.handle(user_input)
+        skill_result = skills.handle(query_to_process)
     except Exception as exc:
         skill_result = None
         st.warning(f"Skill router error (falling back to LLM): {exc}")
@@ -269,7 +336,7 @@ if user_input:
             agent = _build_cached_agent(provider, model)
             cfg = {"configurable": {"thread_id": st.session_state.thread_id}}
             agent.update_state(cfg, {"messages": [
-                HumanMessage(content=user_input),
+                HumanMessage(content=query_to_process),
                 AIMessage(content=skill_result),
             ]})
         except Exception as exc:
@@ -287,7 +354,7 @@ if user_input:
             with st.spinner(f"Asking {provider} / {model}…"):
                 try:
                     result = agent.invoke(
-                        {"messages": [{"role": "user", "content": user_input}]},
+                        {"messages": [{"role": "user", "content": query_to_process}]},
                         config={"configurable": {"thread_id": st.session_state.thread_id}},
                     )
                 except Exception as exc:
