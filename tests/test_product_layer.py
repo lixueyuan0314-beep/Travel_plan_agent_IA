@@ -2,6 +2,7 @@ from datetime import date
 import unittest
 
 from product.confirmation import UserPreferences, build_search_plan
+from product.demo_data import generate_demo_options
 from product.scoring import TravelOption, rank_options, score_option
 
 
@@ -50,6 +51,17 @@ class ProductLayerTests(unittest.TestCase):
             rank_options([cheap, fast], UserPreferences(priority="fastest"))[0][0],
             fast,
         )
+
+    def test_demo_options_are_deterministic_and_cover_selected_modes(self):
+        plan = build_search_plan(
+            "Plan Paris to Lyon",
+            {"mode": "plan", "from": "Paris", "to": "Lyon", "date": date(2099, 5, 20)},
+        )
+        first = generate_demo_options(plan)
+        second = generate_demo_options(plan)
+        self.assertEqual(first, second)
+        self.assertEqual(len(first), 6)
+        self.assertEqual({option.label.split()[0] for option in first}, {"Flight", "Train", "Bus"})
 
 
 if __name__ == "__main__":

@@ -33,6 +33,17 @@ single- and multi-mode routes, missing fields, ambiguous destination text,
 invalid or past dates, typo recovery, and preference validation. They never
 contact an LLM, MCP server, or transport provider.
 
+### Run the key-free portfolio demo
+
+```powershell
+streamlit run demo_app.py
+```
+
+The demo uses clearly labelled, deterministic sample options so reviewers can
+experience confirmation, hard constraints, and explainable ranking without
+adding API keys or contacting live providers. Use `app.py` for the full MCP
+agent with configured provider credentials.
+
 A French-Europe **travel CLI/web agent**: real-time flights (Duffel),
 trains (SNCF Open Data), and buses (FlixBus) wired into a LangChain
 agent with three transport MCP servers, a regex fast-path that
