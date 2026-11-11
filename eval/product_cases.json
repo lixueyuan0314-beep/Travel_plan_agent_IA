@@ -1,0 +1,146 @@
+[
+  {
+    "id": "confirm_plan_iso_date",
+    "category": "valid_route",
+    "query": "Plan a trip from Paris to Lyon on 2099-05-20",
+    "expected": {"action": "confirm", "mode": "plan", "from": "Paris", "to": "Lyon"}
+  },
+  {
+    "id": "confirm_train",
+    "category": "valid_route",
+    "query": "TGV from Paris to Bordeaux on 2099-06-10",
+    "expected": {"action": "confirm", "mode": "train", "from": "Paris", "to": "Bordeaux"}
+  },
+  {
+    "id": "confirm_flight",
+    "category": "valid_route",
+    "query": "Find flights from London to Madrid for 2099-07-01",
+    "expected": {"action": "confirm", "mode": "flight", "from": "London", "to": "Madrid"}
+  },
+  {
+    "id": "confirm_bus",
+    "category": "valid_route",
+    "query": "FlixBus from Berlin to Prague on 2099-08-14",
+    "expected": {"action": "confirm", "mode": "bus", "from": "Berlin", "to": "Prague"}
+  },
+  {
+    "id": "confirm_bare_route_relative_date",
+    "category": "valid_route",
+    "query": "Paris to Lyon tomorrow",
+    "expected": {"action": "confirm", "mode": "plan", "from": "Paris", "to": "Lyon"}
+  },
+  {
+    "id": "confirm_multiword_cities",
+    "category": "valid_route",
+    "query": "Train from Lille Europe to Aix en Provence on 2099-09-03",
+    "expected": {"action": "confirm", "mode": "train", "from": "Lille Europe", "to": "Aix en Provence"}
+  },
+  {
+    "id": "confirm_date_before_route",
+    "category": "valid_route",
+    "query": "Plan on 2099-10-11 from Paris to Lyon",
+    "expected": {"action": "confirm", "mode": "plan", "from": "Paris", "to": "Lyon"}
+  },
+  {
+    "id": "confirm_multiple_modes_become_plan",
+    "category": "valid_route",
+    "query": "Compare flight and train from Paris to Rome on 2099-11-12",
+    "expected": {"action": "confirm", "mode": "plan", "from": "Paris", "to": "Rome"}
+  },
+  {
+    "id": "confirm_date_typo_recovery",
+    "category": "valid_route",
+    "query": "Bus from Paris to Lyon tomorrw",
+    "expected": {"action": "confirm", "mode": "bus", "from": "Paris", "to": "Lyon"}
+  },
+  {
+    "id": "confirm_day_after_tomorrow",
+    "category": "valid_route",
+    "query": "Paris to Lyon day after tomorrow",
+    "expected": {"action": "confirm", "mode": "plan", "from": "Paris", "to": "Lyon"}
+  },
+  {
+    "id": "fallback_empty",
+    "category": "missing_parameter",
+    "query": "",
+    "expected": {"action": "fallback"}
+  },
+  {
+    "id": "fallback_not_a_route",
+    "category": "missing_parameter",
+    "query": "What is the weather in Paris?",
+    "expected": {"action": "fallback"}
+  },
+  {
+    "id": "fallback_missing_origin",
+    "category": "missing_parameter",
+    "query": "Get me to Lyon tomorrow",
+    "expected": {"action": "fallback"}
+  },
+  {
+    "id": "fallback_missing_destination",
+    "category": "missing_parameter",
+    "query": "I want to leave from Paris tomorrow",
+    "expected": {"action": "fallback"}
+  },
+  {
+    "id": "fallback_invalid_calendar_date",
+    "category": "invalid_date",
+    "query": "Train from Paris to Lyon on 2099-02-30",
+    "expected": {"action": "fallback"}
+  },
+  {
+    "id": "fallback_past_date",
+    "category": "invalid_date",
+    "query": "Flight from Paris to Lyon on 2020-01-01",
+    "expected": {"action": "fallback"}
+  },
+  {
+    "id": "fallback_unrecognized_date",
+    "category": "invalid_date",
+    "query": "Bus from Paris to Lyon on someday",
+    "expected": {"action": "fallback"}
+  },
+  {
+    "id": "fallback_noisy_destination",
+    "category": "ambiguous_route",
+    "query": "Paris to Lyon which is cheapest",
+    "expected": {"action": "fallback"}
+  },
+  {
+    "id": "fallback_destination_too_long",
+    "category": "ambiguous_route",
+    "query": "Train from Paris to City With Four Words Here on 2099-12-01",
+    "expected": {"action": "fallback"}
+  },
+  {
+    "id": "preferences_balanced_valid",
+    "category": "preference_validation",
+    "preferences": {"priority": "balanced", "max_budget_eur": 150, "max_changes": 1},
+    "expected": {"action": "accepted"}
+  },
+  {
+    "id": "preferences_fastest_valid",
+    "category": "preference_validation",
+    "preferences": {"priority": "fastest", "max_budget_eur": null, "max_changes": 0},
+    "expected": {"action": "accepted"}
+  },
+  {
+    "id": "preferences_zero_budget_rejected",
+    "category": "preference_validation",
+    "preferences": {"priority": "balanced", "max_budget_eur": 0, "max_changes": 1},
+    "expected": {"action": "rejected"}
+  },
+  {
+    "id": "preferences_negative_changes_rejected",
+    "category": "preference_validation",
+    "preferences": {"priority": "cheapest", "max_budget_eur": 50, "max_changes": -1},
+    "expected": {"action": "rejected"}
+  },
+  {
+    "id": "preferences_unknown_priority_rejected",
+    "category": "preference_validation",
+    "preferences": {"priority": "luxury", "max_budget_eur": 500, "max_changes": 0},
+    "expected": {"action": "rejected"}
+  }
+]

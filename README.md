@@ -10,12 +10,26 @@ agent:
 - structured **recommend → confirm → execute** flow before live MCP searches;
 - user-controlled budget, transfer limit, and ranking priority;
 - transparent option-scoring utilities with deterministic tests;
+- a reproducible 24-case offline safety evaluation with no API keys required;
 - safer diagnostics that never display API-key prefixes;
 - a documented product case study in [PRODUCT_CASE_STUDY.md](PRODUCT_CASE_STUDY.md).
 
 The original MCP integrations, agent routing, UI, and evaluation framework are
 credited to the upstream project. The items above are the fork's independent
 extension.
+
+### Reproduce the product evaluation
+
+```powershell
+python -m eval.product_eval
+python -m unittest tests.test_product_layer tests.test_product_eval -v
+```
+
+Current result: **24/24 offline scenarios passed (100%)**, with **0 false
+confirmations** and **0 missed confirmations**. The scenarios cover valid
+single- and multi-mode routes, missing fields, ambiguous destination text,
+invalid or past dates, typo recovery, and preference validation. They never
+contact an LLM, MCP server, or transport provider.
 
 A French-Europe **travel CLI/web agent**: real-time flights (Duffel),
 trains (SNCF Open Data), and buses (FlixBus) wired into a LangChain

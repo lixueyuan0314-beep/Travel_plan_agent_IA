@@ -28,19 +28,35 @@ change the weights, while hard budget and transfer constraints filter options.
 This is deliberately deterministic so a product manager can explain why one
 option ranks above another.
 
-## Evaluation plan
+## Offline evaluation
 
-The pure product layer is covered by deterministic tests for:
+The product layer now has a reproducible, network-free scenario suite in
+`eval/product_cases.json`. It runs without an LLM, API key, MCP server, or
+transport provider and checks whether the agent should show a confirmation or
+fall back for clarification.
+
+Current result: **24/24 scenarios passed (100%)**, with **0 false
+confirmations** and **0 missed confirmations**. Coverage includes:
 
 - single-mode and multi-mode confirmation previews;
+- multiword routes, relative dates, and conservative typo recovery;
+- missing route parameters and ambiguous destination text;
+- malformed, unrecognized, and past dates;
 - invalid preference validation;
 - budget and transfer constraints;
 - ranking changes when the user changes priority.
 
+Run it with:
+
+```powershell
+python -m eval.product_eval
+python -m unittest tests.test_product_layer tests.test_product_eval -v
+```
+
 The next product iteration should parse provider responses into the shared
-`TravelOption` schema, display per-option score explanations, and add an
-offline scenario set covering missing parameters, no-result responses, API
-timeouts, and malformed provider payloads.
+`TravelOption` schema, display per-option score explanations, and extend the
+suite with mocked no-result responses, API timeouts, and malformed provider
+payloads.
 
 ## Attribution
 
