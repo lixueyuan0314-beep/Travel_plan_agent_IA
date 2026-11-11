@@ -1,5 +1,7 @@
 # Agent-IA-Apprentissage
 
+[![Product safety evaluation](https://github.com/lixueyuan0314-beep/Travel_plan_agent_IA/actions/workflows/product-eval.yml/badge.svg)](https://github.com/lixueyuan0314-beep/Travel_plan_agent_IA/actions/workflows/product-eval.yml)
+
 > Un projet pour approfondir mes connaissances en LLM, Agent IA, RAG, MCP…
 
 ## Fork extension: product safety and preference controls
