@@ -44,6 +44,16 @@ invalid or past dates, typo recovery, preference validation, provider timeouts,
 connection failures, empty results, and malformed payloads. They never contact
 an LLM, MCP server, or transport provider.
 
+### Run a user test
+
+The repository includes a ready-to-use [Chinese moderator guide](research/USER_TEST_GUIDE.md)
+and an [Excel research tracker](outputs/01a06401-09e1-74b3-8c30-eab38374bf47/Travel_Agent_User_Test_Tracker.xlsx)
+for 5–10 participants. The kit covers five tasks: generating and checking a
+plan, applying hard constraints, changing ranking preferences, recovering from
+missing information, and understanding a timeout-then-retry scenario. The
+tracker calculates completion rates, timing, and post-test ratings from real
+entries; no participant results are pre-filled.
+
 ### Run the key-free portfolio demo
 
 ```powershell
